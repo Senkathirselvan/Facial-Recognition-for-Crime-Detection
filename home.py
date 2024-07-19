@@ -47,8 +47,15 @@ def goBack():
     if (active_page == 4 and not thread_event.is_set()):
         thread_event.set()
         webcam.release()
+    pages[3].lift()
+    active_page = 3
         
 
+    for widget in pages[active_page].winfo_children():
+        widget.destroy()
+    
+    pages[4].lift()
+    active_page = 4
     for widget in pages[active_page].winfo_children():
         widget.destroy()
 
@@ -57,7 +64,7 @@ def goBack():
 
 
 def basicPageSetup(pageNo):
-    print("basicpagesetup  number:",pageNo)
+    # print("basicpagesetup  number:",pageNo)
     global left_frame, right_frame, heading
 
     back_img = tk.PhotoImage(file= r"/home/senkathir/ssenkathir/machine_learning/machine_learning2/Facial-Recognition-for-Crime-Detection/img/back.png")
@@ -352,7 +359,7 @@ def showCriminalProfile(name):
 # <------- Image Survilence Start-------> #
 
 def getPage2():
-    print("image survilence")
+    # print("image survilence")
     global active_page, left_frame, right_frame, img_label, heading
     img_label = None
     active_page = 2
@@ -446,7 +453,7 @@ def startRecognition():
 total1 = 0
 def getPage3():
     global active_page, video_loop, left_frame, right_frame, thread_event, heading,total1
-    print("getpage3 Video surveillance thread_event:",thread_event)
+    # print("getpage3 Video surveillance thread_event:",thread_event)
     active_page = 3
     pages[3].lift()
 
@@ -460,7 +467,7 @@ def getPage3():
                 fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
                 activeforeground="white").grid(row=0, column=0, padx=25, pady=25)
     total1 += 1
-    print("video surveillance getpage3 running count:",total1)
+    # print("video surveillance getpage3 running count:",total1)
 
 
 # <------- Video  Selection For Video Surveillance -------> #
@@ -469,8 +476,8 @@ def selectvideo():
     global left_frame, img_label, img_read,total
     
     for wid in right_frame.winfo_children():
-        print(right_frame)
-        print("widget:",wid)
+        # print(right_frame)
+        # print("widget:",wid)
         wid.destroy()
 
     filetype = [("video", "*.mp4 *.mkv")]
@@ -480,7 +487,7 @@ def selectvideo():
     
     if(len(path) > 0):
         total += 1
-        print("select video count:",total) 
+        # print("select video count:",total) 
         getPage4(p)
         
      
@@ -492,8 +499,8 @@ def getPage4(path):
     p=path
     # print(p)
     global active_page, video_loop, left_frame, right_frame, thread_event, heading,total3
-    print("Detect Criminals active page:",active_page)
-    print("page4 thread event:",thread_event)
+    # print("Detect Criminals active page:",active_page)
+    # print("page4 thread event:",thread_event)
     active_page = 4
     pages[4].lift()
 
@@ -506,11 +513,11 @@ def getPage4(path):
     btn_grid.pack()
 
     (model, names) = train_model()
-    print('Training Successful. Detecting Faces')
+    # print('Training Successful. Detecting Faces')
 
     thread_event = threading.Event()
     total3 += 1
-    print("page4:",total3)
+    # print("page4:",total3)
     thread = threading.Thread(target=videoLoop, args=(p,model, names))
     thread.start()
 
@@ -623,7 +630,7 @@ def live():
 
 def getPage6(path):
     global active_page, video_loop, left_frame, right_frame, thread_event, heading
-    active_page = 2
+    active_page = 4
     pages[4].lift()
 
     basicPageSetup(4)
