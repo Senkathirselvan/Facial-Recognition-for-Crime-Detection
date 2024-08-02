@@ -15,7 +15,6 @@ import csv
 import numpy as np
 import ntpath
 import os
-import pyttsx3
 
 active_page = 0
 thread_event = None
@@ -44,6 +43,14 @@ for i in range(5):
 def goBack():
     global active_page, thread_event, webcam
 
+    if (active_page == 2 ):
+        pages[2].lift()
+        active_page = 2
+        
+
+    for widget in pages[active_page].winfo_children():
+        widget.destroy()
+
     if (active_page == 4 and not thread_event.is_set()):
         thread_event.set()
         webcam.release()
@@ -58,16 +65,14 @@ def goBack():
     active_page = 4
     for widget in pages[active_page].winfo_children():
         widget.destroy()
-
     pages[0].lift()
     active_page = 0
 
 
 def basicPageSetup(pageNo):
-    # print("basicpagesetup  number:",pageNo)
     global left_frame, right_frame, heading
 
-    back_img = tk.PhotoImage(file= r"/home/senkathir/ssenkathir/machine_learning/machine_learning2/Facial-Recognition-for-Crime-Detection/img/back.png")
+    back_img = tk.PhotoImage(file= r"C:\Users\hp\Documents\GitHub\Face-Recognition-For-Criminal-Detection-GUi\img\back.png")
     back_button = tk.Button(pages[pageNo], image=back_img, bg="#3E3B3C", bd=0, highlightthickness=0,
            activebackground="#3E3B3C", command=goBack)
     back_button.image = back_img
@@ -222,8 +227,9 @@ def register(entries, required, menu_var):
         shutil.rmtree(path, ignore_errors=True)
     else:
         # Storing data in database
-        insertData(entry_data)
-        rowId=1
+        # insertData(entry_data)  ------>Because the profile_pics Folder Stored  Only One Images For The Reason This (rowId=1) 
+        # rowId=1
+        rowId = insertData(entry_data) #------>Solved Issue
         if(rowId >= 0):
             messagebox.showinfo("Success", "Criminal Registered Successfully.")
             shutil.move(path, os.path.join('face_samples', entry_data["Name"]))
@@ -356,49 +362,6 @@ def showCriminalProfile(name):
         val = "---" if (item[1]=="") else item[1]
         tk.Label(info_frame, text=val.capitalize(), fg="white", font="Arial 15", bg="#202d42").grid(row=i, column=2, sticky='w')
 
-# <------- Image Survilence Start-------> #
-
-def getPage2():
-    # print("image survilence")
-    global active_page, left_frame, right_frame, img_label, heading
-    img_label = None
-    active_page = 2
-    pages[2].lift()
-
-    basicPageSetup(2)
-    heading.configure(text="Detect Criminal")
-    right_frame.configure(text="Detected Criminals", fg="white")
-
-    btn_grid = tk.Frame(left_frame, bg="#3E3B3C")
-    btn_grid.pack()
-
-    tk.Button(btn_grid, text="Select Image", command=selectImage, font="Arial 15 bold", padx=20, bg="#000000",
-            fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
-            activeforeground="white").grid(row=0, column=0, padx=25, pady=25)
-    tk.Button(btn_grid, text="Recognize", command=startRecognition, font="Arial 15 bold", padx=20, bg="#000000",
-           fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
-           activeforeground="white").grid(row=0, column=1, padx=25, pady=25)
-
-
-# <------- Image Selection For Image Surveillance -------> #
-
-def selectImage():
-    global left_frame, img_label, img_read
-    for wid in right_frame.winfo_children():
-        wid.destroy()
-
-    filetype = [("images", "*.jpg *.jpeg *.png")]
-    path = filedialog.askopenfilename(title="Choose a image", filetypes=filetype)
-
-    if(len(path) > 0):
-        img_read = cv2.imread(path)
-
-        img_size =  left_frame.winfo_height() - 40
-        showImage(img_read, img_size)
-        
-# <------------End Image Selection For Image Surveillance------------> #        
-        
-# <------- Start Recognition For Image Surveillance -------> #
 
 def startRecognition():
     global img_read, img_label
@@ -436,92 +399,47 @@ def startRecognition():
                                             font="Arial 15 bold", pady=20))
             crims_found_labels[i].pack(fill="x", padx=20, pady=10)
             crims_found_labels[i].bind("<Button-1>", lambda e, name=crim[0]:showCriminalProfile(name))
-            # <------- Text To Voice On Image Surveillance --------> #
-            names=list(crim)
-            name = names[0]
-            engine = pyttsx3.init()
-            text = name
-            voices = engine.getProperty("voices")
-            engine.setProperty("voice", voices[15].id)
-            engine.say(text)
-            engine.runAndWait()
-            # <-------------------------End-----------------------------> #
-            
-# <-----------------------------------------------End Recognition For Image Surveillance---------------------------------------------------------> #
-
-# <------- Video Survilence Start-------> #
-total1 = 0
-def getPage3():
-    global active_page, video_loop, left_frame, right_frame, thread_event, heading,total1
-    # print("getpage3 Video surveillance thread_event:",thread_event)
-    active_page = 3
-    pages[3].lift()
-
-    basicPageSetup(3)
-    heading.configure(text="Video Surveillance")
-
-    btn_grid = tk.Frame(left_frame,bg="#3E3B3C")
-    btn_grid.pack()
-
-    tk.Button(btn_grid, text="Select Video", command=selectvideo, font="Arial 15 bold", padx=20, bg="#000000",
-                fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
-                activeforeground="white").grid(row=0, column=0, padx=25, pady=25)
-    total1 += 1
-    # print("video surveillance getpage3 running count:",total1)
 
 
-# <------- Video  Selection For Video Surveillance -------> #
-total = 0
-def selectvideo():
-    global left_frame, img_label, img_read,total
-    
+def selectImage():
+    global left_frame, img_label, img_read
     for wid in right_frame.winfo_children():
-        # print(right_frame)
-        # print("widget:",wid)
         wid.destroy()
 
-    filetype = [("video", "*.mp4 *.mkv")]
-    path = filedialog.askopenfilename(title="Choose a video", filetypes=filetype)
-    p=''
-    p=path
-    
+    filetype = [("images", "*.jpg *.jpeg *.png")]
+    path = filedialog.askopenfilename(title="Choose a image", filetypes=filetype)
+
     if(len(path) > 0):
-        total += 1
-        # print("select video count:",total) 
-        getPage4(p)
-        
-     
-# <------------End Video Selection For Video Surveillance------------> #        
+        img_read = cv2.imread(path)
 
-# <-------- video surveillance Page -------> #
-total3 = 0
-def getPage4(path):
-    p=path
-    # print(p)
-    global active_page, video_loop, left_frame, right_frame, thread_event, heading,total3
-    # print("Detect Criminals active page:",active_page)
-    # print("page4 thread event:",thread_event)
-    active_page = 4
-    pages[4].lift()
+        img_size =  left_frame.winfo_height() - 40
+        showImage(img_read, img_size)
 
-    basicPageSetup(4)
-    heading.configure(text="Video Surveillance")
-    right_frame.configure(text="Detected Criminals")
-    left_frame.configure(pady=40)
 
-    btn_grid = tk.Frame(right_frame, bg="#3E3B3C")
+## Detection Page ##
+def getPage2():
+    global active_page, left_frame, right_frame, img_label, heading
+    img_label = None
+    active_page = 2
+    pages[2].lift()
+
+    basicPageSetup(2)
+    heading.configure(text="Detect Criminal")
+    right_frame.configure(text="Detected Criminals", fg="white")
+
+    btn_grid = tk.Frame(left_frame, bg="#3E3B3C")
     btn_grid.pack()
 
-    (model, names) = train_model()
-    # print('Training Successful. Detecting Faces')
+    tk.Button(btn_grid, text="Select Image", command=selectImage, font="Arial 15 bold", padx=20, bg="#000000",
+            fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
+            activeforeground="white").grid(row=0, column=0, padx=25, pady=25)
+    tk.Button(btn_grid, text="Recognize", command=startRecognition, font="Arial 15 bold", padx=20, bg="#000000",
+           fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
+           activeforeground="white").grid(row=0, column=1, padx=25, pady=25)
 
-    thread_event = threading.Event()
-    total3 += 1
-    # print("page4:",total3)
-    thread = threading.Thread(target=videoLoop, args=(p,model, names))
-    thread.start()
+# def path_leaf(path):
+#     head,tail = ntpath.split(path)
 
-# <------- Video Loop -------> #
 
 def videoLoop(path,model, names):
     p=path
@@ -537,17 +455,23 @@ def videoLoop(path,model, names):
     img_label = None
     field=['S.No.', 'Name', 'Time']
     g=filenam+'.csv'
+    # filename = "g.csv"
     filename = g
+    # with open('people.csv', 'w', ) as csvfile:
+    # peoplewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    # os.path.join(path, vid.split('.')[0]+'_'+str(count)+'.png'
     num=0
     try:
         # with open('people_Details.csv', 'w', ) as csvfile:
         with open(filename, 'w') as csvfile:
+            # peoplewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow(field)   
             while not thread_event.is_set():
                 
                 # Loop until the camera is working
                 
+                    
                     while (True):
                         # Put the image from the webcam into 'frame'
                         (return_val, frame) = webcam.read()
@@ -580,13 +504,6 @@ def videoLoop(path,model, names):
                             crims_found_labels[i].pack(fill="x", padx=20, pady=10)
                             crims_found_labels[i].bind("<Button-1>", lambda e, name=crim[0]: showCriminalProfile(name))
                             y=crim[0]
-                            # <------- Text To Voice On Video Surveillance --------> #
-                            engine = pyttsx3.init()
-                            voices = engine.getProperty("voices")
-                            engine.setProperty("voice", voices[15].id)
-                            engine.say(y)
-                            engine.runAndWait()
-                            # <-------------------------End-----------------------------> #
                             print(x,y)
                             arr = [num,y,x]
                             # peoplewriter.writerow(arr)
@@ -599,42 +516,23 @@ def videoLoop(path,model, names):
                     img_size = min(left_frame.winfo_width(), left_frame.winfo_height()) - 20
 
                     showImage(frame, img_size)
+
     except RuntimeError:
         print("[INFO]Caught Runtime Error")
     except tk.TclError:
         print("[INFO]Caught Tcl Error")
 
-# <-----------------------------------------------End Video Surveillance---------------------------------------------------------> #
 
-# <------- Live Camera Surveillance Start --------> #
-
-def getPage5():
-    global active_page, left_frame, heading
-    active_page = 3
-    pages[3].lift()
-
-    basicPageSetup(3)
-    heading.configure(text="Live")
-
-    btn_grid = tk.Frame(left_frame, bg="#3E3B3C")
-    btn_grid.pack()
-
-    tk.Button(btn_grid, text="Select Camera", command=live, font="Arial 15 bold", padx=20, bg="#000000",
-              fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
-              activeforeground="white").grid(row=0, column=0, padx=25, pady=25)
-
-def live():
-    # Start video capture from USB Logitech camera
-    video_source = 0  # Usually, 0 is the default camera. You might need to change this if you have multiple cameras.
-    getPage6(video_source)
-
-def getPage6(path):
+# video surveillance Page ##
+def getPage4(path):
+    p=path
+    # print(p)
     global active_page, video_loop, left_frame, right_frame, thread_event, heading
     active_page = 4
     pages[4].lift()
 
     basicPageSetup(4)
-    heading.configure(text="Live")
+    heading.configure(text="Video Surveillance")
     right_frame.configure(text="Detected Criminals")
     left_frame.configure(pady=40)
 
@@ -645,79 +543,69 @@ def getPage6(path):
     print('Training Successful. Detecting Faces')
 
     thread_event = threading.Event()
-    thread = threading.Thread(target=videoLoop1, args=(path, model, names))
+    thread = threading.Thread(target=videoLoop, args=(p,model, names))
     thread.start()
+
+def getPage3():
+    global active_page, video_loop, left_frame, right_frame, thread_event, heading
+    active_page = 3
+    pages[3].lift()
+
+    basicPageSetup(3)
+    heading.configure(text="Video Surveillance")
+
+    btn_grid = tk.Frame(left_frame,bg="#3E3B3C")
+    btn_grid.pack()
+
+    tk.Button(btn_grid, text="Select Video", command=selectvideo, font="Arial 15 bold", padx=20, bg="#000000",
+                fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
+                activeforeground="white").grid(row=0, column=0, padx=25, pady=25)
     
-# <------- Video Loop1 -------> #
+    
 
-def videoLoop1(path, model, names):
-    global thread_event, left_frame, webcam, img_label
-    start = time.time()
-    webcam = cv2.VideoCapture(path)  # Open the camera with the given path
-    old_recognized = []
-    crims_found_labels = []
-    times = []
-    img_label = None
-    field = ['S.No.', 'Name', 'Time']
-    filenam = 'detected_faces'  # Filename for the CSV file
-    g = filenam + '.csv'
-    filename = g
-    num = 0
+    # tk.Button(btn_grid, text="Recognize", command=getPage3(), font="Arial 15 bold", padx=20, bg="#000000",
+    #        fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
+    #        activeforeground="white").grid(row=0, column=1, padx=25, pady=25)
 
-    try:
-        with open(filename, 'w') as csvfile:
-            csvwriter = csv.writer(csvfile)
-            csvwriter.writerow(field)
-            while not thread_event.is_set():
-                while True:
-                    # Put the image from the webcam into 'frame'
-                    while (True):
-                        (return_val, frame) = webcam.read()
-                        if return_val:
-                            break
 
-                    frame = cv2.flip(frame, 1, 0)
-                    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    face_coords = detect_faces(gray_frame)
-                    (frame, recognized) = recognize_face(model, frame, gray_frame, face_coords, names)
-                    recog_names = [item[0] for item in recognized]
+def selectvideo():
+    global left_frame, img_label, img_read
+    for wid in right_frame.winfo_children():
+        wid.destroy()
 
-                    if recog_names != old_recognized:
-                        for wid in right_frame.winfo_children():
-                            wid.destroy()
-                        del(crims_found_labels[:])
+    filetype = [("video", "*.mp4 *.mkv")]
+    path = filedialog.askopenfilename(title="Choose a video", filetypes=filetype)
+    p=''
+    p=path
+    
+    if(len(path) > 0):
+        # vid_read = cv2.imread(path)
+        # print(vid_read)
+        getPage4(p)
+        # img_read = cv2.imread(path)
 
-                        for i, crim in enumerate(recognized):
-                            num += 1
-                            x = time.time() - start
-                            crims_found_labels.append(tk.Label(right_frame, text=crim[0], bg="orange",
-                                                            font="Arial 15 bold", pady=20))
-                            crims_found_labels[i].pack(fill="x", padx=20, pady=10)
-                            crims_found_labels[i].bind("<Button-1>", lambda e, name=crim[0]: showCriminalProfile(name))
-                            y = crim[0]
-                            # <------- Text To Voice On Live Camera --------> #
-                            engine = pyttsx3.init()
-                            text = y
-                            voices = engine.getProperty("voices")
-                            engine.setProperty("voice", voices[15].id)
-                            engine.say(text)
-                            engine.runAndWait()
-                            # <--------------------End-------------------------> #
-                            print(x, y)
-                            arr = [num, y, x]
-                            csvwriter.writerow(arr)
-                        old_recognized = recog_names
+    #     img_size =  left_frame.winfo_height() - 40
+    #     showImage(img_read, img_size)
 
-                    img_size = min(left_frame.winfo_width(), left_frame.winfo_height()) - 20
-                    showImage(frame, img_size)
-        
-    except RuntimeError:
-        print("[INFO]Caught Runtime Error")
-    except tk.TclError:
-        print("[INFO]Caught Tcl Error")
+# def getPage3():
+#     global active_page, left_frame, right_frame, img_label, heading
+#     img_label = None
+#     active_page = 2
+#     pages[2].lift()
 
-# <-----------------------------------------------End Live Camera Surveillance---------------------------------------------------------> #
+#     basicPageSetup(2)
+#     heading.configure(text="Video Surveillance")
+#     right_frame.configure(text="Detected Criminals")
 
+#     btn_grid = tk.Frame(left_frame, bg="#3E3B3C")
+#     btn_grid.pack()
+
+#     tk.Button(btn_grid, text="Select video", command=selectvideo, font="Arial 15 bold", padx=20, bg="#000000",
+#             fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
+#             activeforeground="white").grid(row=0, column=0, padx=25, pady=25)
+#     tk.Button(btn_grid, text="Recognize", command=startRecognition, font="Arial 15 bold", padx=20, bg="#000000",
+#            fg="white", pady=10, bd=0, highlightthickness=0, activebackground="#3E3B3C",
+#            activeforeground="white").grid(row=0, column=1, padx=25, pady=25)
 
 def selectvideo1():
     # global left_frame, img_label, img_read
@@ -738,7 +626,7 @@ def selectvideo1():
 tk.Label(pages[0], text="Face Recognition System for Criminal Detection", fg="black", bg="#3E3B3C",
       font="Arial 25 bold", pady=30).pack()
 
-logo = tk.PhotoImage(file = r"/home/senkathir/ssenkathir/machine_learning/machine_learning2/Facial-Recognition-for-Crime-Detection/img/logo2.png")
+logo = tk.PhotoImage(file = r"C:\Users\hp\Documents\GitHub\Face-Recognition-For-Criminal-Detection-GUi\img\logo2.png")
 tk.Label(pages[0], image=logo, bg="#3E3B3C").pack(side='left')
 
 btn_frame = tk.Frame(pages[0], bg="#3E3B3C", pady=30)
@@ -748,7 +636,6 @@ tk.Button(btn_frame, text="Input Video", command=selectvideo1)
 tk.Button(btn_frame, text="Add Criminal Details", command=getPage1)
 tk.Button(btn_frame, text="Image Surveillance", command=getPage2)
 tk.Button(btn_frame, text="Video Surveillance", command=getPage3)
-tk.Button(btn_frame, text="Live", command=getPage5)
 
 
 for btn in btn_frame.winfo_children():
